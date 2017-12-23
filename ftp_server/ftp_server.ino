@@ -26,11 +26,12 @@ void setup(void){
   uint8_t chipSelect = 2;
   
   Serial.begin(9600);
+  Serial.print("SD begin....");
   if (!sd.begin(chipSelect, SPI_HALF_SPEED)) {
-    Serial.println("sd begin failed");
+    Serial.println("failed....");
     return;
   }
-  Serial.println("sd begin OK");
+  Serial.println("ok....");
   sd.ls(&Serial,LS_DATE | LS_SIZE | LS_R);
 
   Serial.print("Ethernet begin....");

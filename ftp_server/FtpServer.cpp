@@ -378,7 +378,9 @@ boolean FtpServer::processCommand()
     else
     {
       client.println( "150 Accepted data connection");
+      #ifdef FTP_DEBUG
       sd.ls(&Serial,LS_DATE | LS_SIZE | LS_R);
+      #endif
       sd.ls(&data,LS_DATE | LS_SIZE | LS_R);
       uint16_t nm = 0;
       client.println( "226 " + String(nm) + " matches total");
