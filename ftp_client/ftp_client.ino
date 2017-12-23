@@ -4,7 +4,6 @@
    Port from https://playground.arduino.cc/Code/FTP
    
 */
-
 #include <SPI.h>
 #include <Ethernet.h>
 #include <SdFat.h>      // https://github.com/jbeynon/sdfatlib
@@ -18,7 +17,7 @@
 #define RUNNING_LED     13
 
 // this must be unique
-byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x59, 0x67 };  
+byte mac[] = { 0x00, 0xA2, 0xDA, 0x00, 0x59, 0x67 };  
 
 EthernetClient client;
 EthernetClient dclient;

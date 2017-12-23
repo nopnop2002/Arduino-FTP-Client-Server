@@ -29,7 +29,7 @@ void setup(void){
   Serial.print("SD begin....");
   if (!sd.begin(chipSelect, SPI_HALF_SPEED)) {
     Serial.println("failed....");
-    return;
+    while(1) {}
   }
   Serial.println("ok....");
   sd.ls(&Serial,LS_DATE | LS_SIZE | LS_R);

@@ -224,6 +224,8 @@ boolean FtpServer::processCommand()
     char path[ FTP_CWD_SIZE ];
     if( strcmp( parameters, "." ) == 0 )  { // 'CWD .' is the same as PWD command
       client.println( "257 \"" + String(cwdName) + "\" is your current directory");
+    } else if ( strcmp(parameters, "/") ==  0) {
+      client.println( "257 \"" + String(cwdName) + "\" is your current directory");
     } else if ( strcmp(parameters, "..") ==  0) {
       client.println( "500 Unknow " +String(command) + " " +String(parameters) );
     } else if ( strlen(parameters) > 0) {
@@ -380,11 +382,34 @@ boolean FtpServer::processCommand()
     else
     {
       client.println( "150 Accepted data connection");
-      #ifdef FTP_DEBUG
-      sd.ls(&Serial,LS_DATE | LS_SIZE | LS_R);
-      #endif
-      sd.ls(&data,LS_DATE | LS_SIZE | LS_R);
       uint16_t nm = 0;
+
+      uint32_t fsize;
+      char buf[10];
+      sd.chdir( cwdName );
+      while (file.openNext(sd.vwd(), O_READ)) {
+        if (file.isDir()) {
+          data.print("drw-r--r--   ");
+        } else {
+          data.print("-rw-r--r--   ");
+        }
+        data.print(_FTP_USER);
+        data.print(" ");
+        data.print(_FTP_USER);
+        fsize = file.fileSize();
+        sprintf(buf,"%9ld ",fsize);
+        data.print(buf);
+        file.printModifyDateTime(&data);
+        data.print(" ");
+        file.printName(&data);
+        #ifdef FTP_DEBUG
+        file.printName(&Serial);
+        Serial.println("");
+        #endif
+        data.println("");
+        file.close();
+        nm++;
+      }
       client.println( "226 " + String(nm) + " matches total");
       data.stop();
     }
