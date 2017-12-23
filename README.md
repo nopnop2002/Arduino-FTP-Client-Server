@@ -5,6 +5,8 @@ Arduine ATMEGA2560
 W5100 Ethernet module   
 SD Card module   
 
+![ftp_server-1](https://user-images.githubusercontent.com/6020549/34323189-9db31f7e-e880-11e7-8403-bda8b8491158.JPG)
+
 ----
 
 # Sofware requirement:    
@@ -51,8 +53,8 @@ Please read README.TXT
 
 ----
 
-![ftp_server-1](https://user-images.githubusercontent.com/6020549/34322583-0f724814-e86e-11e7-91fe-b1f510ad5a88.jpg)
+Transfer speed is very slow.   
 
-![ftp_server-2](https://user-images.githubusercontent.com/6020549/34322580-0350e202-e86e-11e7-8e88-e2d37c5aeac8.jpg)
+![ftp_server-2](https://user-images.githubusercontent.com/6020549/34323187-9a9dafac-e880-11e7-83fe-bc5e3dc44173.jpg)
 
-
+![ftp_server-3](https://user-images.githubusercontent.com/6020549/34323186-96d9f74a-e880-11e7-9830-649f40bcce07.jpg)
