@@ -5,6 +5,8 @@ Arduine ATMEGA2560
 W5100 Ethernet module   
 SD Card module   
 
+----
+
 # Sofware requirement:    
 SdFat Library   
 https://github.com/jbeynon/sdfatlib   
@@ -28,6 +30,8 @@ You have to change SdFatConfig.h for Software SPI.
 # You have to change Ethernet library in ArduinoCore.   
 Please read README.TXT   
 
+----
+
 # Wireing:   
 
 |W5100|SD_CARD|MEGA2560
@@ -44,6 +48,8 @@ Please read README.TXT
 ||SCK|Pin#5|
 ||VCC|5V|
 ||GND|GND|
+
+----
 
 ![ftp_server-1](https://user-images.githubusercontent.com/6020549/34322583-0f724814-e86e-11e7-91fe-b1f510ad5a88.jpg)
 
