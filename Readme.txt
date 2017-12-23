@@ -1,4 +1,4 @@
-
+You have to change Ethernet library in ArduinoCore.
 
 C:\Program Files\Arduino\libraries\Ethernet\src\EthernetServer.h
      In EthernetServer.h add:
