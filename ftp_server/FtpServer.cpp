@@ -225,7 +225,9 @@ boolean FtpServer::processCommand()
     if( strcmp( parameters, "." ) == 0 )  { // 'CWD .' is the same as PWD command
       client.println( "257 \"" + String(cwdName) + "\" is your current directory");
     } else if ( strcmp(parameters, "..") ==  0) {
+      client.println( "500 Unknow " +String(command) + " " +String(parameters) );
     } else if ( strlen(parameters) > 0) {
+      client.println( "500 Unknow " +String(command) + " " +String(parameters) );
     } else {       
       client.println( "257 \"" + String(cwdName) + "\" is your current directory");
     }
