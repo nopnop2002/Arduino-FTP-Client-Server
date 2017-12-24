@@ -163,7 +163,7 @@ void FtpServer::disconnectClient()
   Serial.println("Disconnecting client");
   #endif
   abortTransfer();
-  client.println("221 Goodbye");
+  client.println("221 Goodbye.");
   client.stop();
 }
 
@@ -511,10 +511,12 @@ boolean FtpServer::processCommand()
   else if( ! strcmp( command, "MKD" ))
   {
     if (sd.exists(parameters)) {
-       client.println( "550 File/Directory " +String(parameters)+ " already exists");
+       client.println( "550 " + String(parameters)+ ": File exists");
     } else {
-      sd.mkdir(parameters);
-      client.println( "257 \"" + String(cwdName) + String(parameters) + "\"- Directory successfully created");  //not support on espyet
+      if (sd.mkdir(parameters) )
+        client.println( "257 \"" + String(cwdName) + String(parameters) + "\" - Directory successfully created");
+      else  
+        client.println( "550 " + String(parameters) + ": Invalid directory name");
     }
   }
   //
@@ -523,7 +525,7 @@ boolean FtpServer::processCommand()
   else if( ! strcmp( command, "RMD" ))
   {
     if (!sd.exists(parameters)) {
-      client.println( "550 Direcory " +String(parameters)+ " not found");
+      client.println( "550 " + String(parameters) + ": No such file or directory");
     } else {
       sd.rmdir(parameters);
       client.println( "250 RMD command successful");

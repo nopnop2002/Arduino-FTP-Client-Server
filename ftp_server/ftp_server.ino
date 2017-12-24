@@ -4,7 +4,6 @@
    Port fron https://github.com/nailbuster/esp8266FTPServer
 
 */
-
 #include <SPI.h>
 #include <Ethernet.h>
 #include <SdFat.h>      // https://github.com/jbeynon/sdfatlib
