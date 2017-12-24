@@ -34,7 +34,7 @@
 #include <Ethernet.h>
 #include <SdFat.h>      // https://github.com/jbeynon/sdfatlib
 
-#define FTP_SERVER_VERSION "FTP-2017-12-23"
+#define FTP_SERVER_VERSION "FTP-2017-12-24"
 
 #define FTP_CTRL_PORT      21        // Command port on wich server is listening  
 #define FTP_DATA_PORT_PASV 50009     // Data port in passive mode
@@ -45,6 +45,7 @@
 #define FTP_FIL_SIZE  255            // max size of a file name
 #define FTP_BUF_SIZE 1024 //512      // size of file buffer for read/write
 //#define FTP_BUF_SIZE 2*1460 //512    // size of file buffer for read/write
+#define BUILT_IN_LED  13             // ON Board LED port
 
 extern SdFat sd;
 extern SdFile file;
@@ -98,7 +99,7 @@ private:
            bytesTransfered;           //
   String   _FTP_USER;
   String   _FTP_PASS;
-
+  int16_t  eltm;
   
 
 };

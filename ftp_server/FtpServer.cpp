@@ -26,7 +26,11 @@ EthernetServer dataServer( FTP_DATA_PORT_PASV );
 void FtpServer::begin(String uname, String pword)
 {
 //  sd.ls(&Serial,LS_DATE | LS_SIZE | LS_R);
-
+  if (BUILT_IN_LED) {
+    pinMode(BUILT_IN_LED,OUTPUT);
+    digitalWrite(BUILT_IN_LED,LOW);
+  }
+  
   // Tells the ftp server to begin listening for incoming connection
   _FTP_USER = uname;
   _FTP_PASS = pword;
@@ -80,7 +84,7 @@ void FtpServer::handleFTP()
     abortTransfer();
     iniVariables();
     #ifdef FTP_DEBUG
-  Serial.println("Ftp server waiting for connection on port "+ String(FTP_CTRL_PORT));
+    Serial.println("Ftp server waiting for connection on port "+ String(FTP_CTRL_PORT));
     #endif
     cmdStatus = 2;
   }
@@ -119,8 +123,8 @@ void FtpServer::handleFTP()
   else if (!client.connected() || !client)
   {
     cmdStatus = 1;
-      #ifdef FTP_DEBUG
-      Serial.println("client disconnected");
+    #ifdef FTP_DEBUG
+    Serial.println("client disconnected");
     #endif
   }
 
@@ -156,7 +160,7 @@ void FtpServer::clientConnected()
 void FtpServer::disconnectClient()
 {
   #ifdef FTP_DEBUG
-  Serial.println(" Disconnecting client");
+  Serial.println("Disconnecting client");
   #endif
   abortTransfer();
   client.println("221 Goodbye");
@@ -188,7 +192,7 @@ boolean FtpServer::userPassword()
   else
   {
     #ifdef FTP_DEBUG
-      Serial.println( "OK. Waiting for commands.");
+    Serial.println( "OK. Waiting for commands.");
     #endif
     client.println( "230 OK.");
     return true;
@@ -200,8 +204,7 @@ boolean FtpServer::userPassword()
 boolean FtpServer::processCommand()
 {
   #ifdef FTP_DEBUG
-    Serial.println("processCommand=" + String(command));
-    Serial.println("parameters=" + String(parameters));
+  Serial.println("processCommand=" + String(command) + " parameters=" + String(parameters));
   #endif
   ///////////////////////////////////////
   //                                   //
@@ -280,8 +283,8 @@ boolean FtpServer::processCommand()
     //data.connect( dataIp, dataPort );
     //data = dataServer.available();
     #ifdef FTP_DEBUG
-      Serial.println("Connection management set to passive");
-      Serial.println( "Data port set to " + String(dataPort));
+    Serial.println("Connection management set to passive");
+    Serial.println( "Data port set to " + String(dataPort));
     #endif
     client.println( "227 Entering Passive Mode ("+ String(dataIp[0]) + "," + String(dataIp[1])+","+ String(dataIp[2])+","+ String(dataIp[3])+","+String( dataPort >> 8 ) +","+String ( dataPort & 255 )+").");
     dataPassiveConn = true;
@@ -348,6 +351,9 @@ boolean FtpServer::processCommand()
   //
   else if( ! strcmp( command, "ABOR" ))
   {
+    #ifdef FTP_DEBUG
+    Serial.println("abort reques");
+    #endif
     abortTransfer();
     client.println( "226 Data connection closed");
   }
@@ -458,7 +464,7 @@ boolean FtpServer::processCommand()
         else
         {
           #ifdef FTP_DEBUG
-          Serial.println("Sending " + String(parameters));
+          Serial.println("Sending " + String(parameters) + "fiseSize=" + String(file.fileSize()));
           #endif
           client.println( "150-Connected to port "+ String(dataPort));
           client.println( "150 " + String(file.fileSize()) + " bytes to download");
@@ -490,7 +496,7 @@ boolean FtpServer::processCommand()
       else
       {
         #ifdef FTP_DEBUG
-          Serial.println( "Receiving " +String(parameters));
+        Serial.println( "Receiving " +String(parameters));
         #endif
         client.println( "150 Connected to port " + String(dataPort));
         millisBeginTrans = millis();
@@ -643,18 +649,27 @@ boolean FtpServer::processCommand()
 
 boolean FtpServer::dataConnect()
 {
-    #ifdef FTP_DEBUG
-      Serial.println("dataConnect=" + String(data.connected()));
-    #endif
+  #ifdef FTP_DEBUG
+  Serial.println("dataConnect=" + String(data.connected()));
+  #endif
   if( ! data.connected() ) {
     if( dataPassiveConn ) {
+      #ifdef FTP_DEBUG
+      Serial.println("dataConnect connect to PASSIVE");
+      #endif
 //      data = dataServer.available();
       data = dataServer.connected();
-    #ifdef FTP_DEBUG
-      Serial.println("dataConnect data=" + String(data));
-    #endif
+      #ifdef FTP_DEBUG
+      Serial.println("dataConnect=" + String(data.connected()));
+      #endif
     } else { 
+      #ifdef FTP_DEBUG
+      Serial.println("dataConnect connect to ACTIVE");
+      #endif
       data.connect( dataIp, dataPort );
+      #ifdef FTP_DEBUG
+      Serial.println("dataConnect=" + String(data.connected()));
+      #endif
     }
   }
 //  return data;
@@ -669,6 +684,18 @@ boolean FtpServer::doRetrieve()
   {
     data.write( buf, nb );
     bytesTransfered += nb;
+    eltm++;
+    if (BUILT_IN_LED) digitalWrite(BUILT_IN_LED,(eltm % 2));
+    #ifdef FTP_DEBUG
+    if((eltm % 10) == 0) {
+      Serial.print("<");
+    }
+    if (eltm == 500) {
+      eltm = 0;
+      Serial.println("");
+    }
+    #endif
+
     return true;
   }
   closeTransfer();
@@ -693,6 +720,17 @@ boolean FtpServer::doStore()
       file.write((uint8_t*) buf, nb );
       bytesTransfered += nb;
     }
+    eltm++;
+    if (BUILT_IN_LED) digitalWrite(BUILT_IN_LED,(eltm % 2));
+    #ifdef FTP_DEBUG
+    if((eltm % 10) == 0) {
+      Serial.print(">");
+    }
+    if (eltm == 500) {
+      eltm = 0;
+      Serial.println("");
+    }
+    #endif
     return true;
   }
   closeTransfer();
@@ -711,7 +749,14 @@ void FtpServer::closeTransfer()
     client.println( "226 File successfully transferred");
   
   file.close();
+  millisEndConnection = millis() + millisTimeOut;
   data.stop();
+  eltm = 0;
+  #ifdef FTP_DEBUG
+  Serial.println("");
+  Serial.println("closeTransfere elapsed time=" + String((millis() - millisBeginTrans)/1000) + " Sec.");
+  #endif
+  if (BUILT_IN_LED) digitalWrite(BUILT_IN_LED,LOW);
 }
 
 void FtpServer::abortTransfer()
@@ -722,10 +767,11 @@ void FtpServer::abortTransfer()
     data.stop(); 
     client.println( "426 Transfer aborted"  );
     #ifdef FTP_DEBUG
-      Serial.println( "Transfer aborted!") ;
+    Serial.println( "Transfer aborted!") ;
     #endif
   }
   transferStatus = 0;
+  eltm = 0;
 }
 
 // Read a char from client connected to ftp server
@@ -748,7 +794,7 @@ int8_t FtpServer::readChar()
    // char c;
    // client.readBytes((uint8_t*) c, 1);
     #ifdef FTP_DEBUG
-      Serial.print( c);
+    Serial.print( c);
     #endif
     if( c == '\\' )
       c = '/';
@@ -852,6 +898,7 @@ boolean FtpServer::makePath( char * fullName, char * param )
   return false;
 }
 
+#if 0
 // Calculate year, month, day, hour, minute and second
 //   from first parameter sent by MDTM command (YYYYMMDDHHMMSS)
 //
@@ -892,6 +939,7 @@ uint8_t FtpServer::getDateTime( uint16_t * pyear, uint8_t * pmonth, uint8_t * pd
   return 15;
 }
 
+
 // Create string YYYYMMDDHHMMSS from date and time
 //
 // parameters:
@@ -908,4 +956,4 @@ char * FtpServer::makeDateTimeStr( char * tstr, uint16_t date, uint16_t time )
            ( time & 0xF800 ) >> 11, ( time & 0x07E0 ) >> 5, ( time & 0x001F ) << 1 );            
   return tstr;
 }
-
+#endif
