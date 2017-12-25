@@ -227,14 +227,20 @@ boolean FtpServer::processCommand()
     char path[ FTP_CWD_SIZE ];
     if( strcmp( parameters, "." ) == 0 )  { // 'CWD .' is the same as PWD command
       client.println( "257 \"" + String(cwdName) + "\" is your current directory");
-    } else if ( strcmp(parameters, "/") ==  0) {
-      client.println( "257 \"" + String(cwdName) + "\" is your current directory");
-    } else if ( strcmp(parameters, "..") ==  0) {
-      client.println( "500 Unknow " +String(command) + " " +String(parameters) );
-    } else if ( strlen(parameters) > 0) {
-      client.println( "500 Unknow " +String(command) + " " +String(parameters) );
-    } else {       
-      client.println( "257 \"" + String(cwdName) + "\" is your current directory");
+    } else {
+      if( makePath(path)) {
+        #ifdef FTP_DEBUG
+        Serial.println("CWD path=" + String(path));
+        #endif
+        if (sd.chdir(path)) {
+          strcpy(cwdName, path);
+          client.println( "257 \"" + String(cwdName) + "\" is your current directory");
+        } else {
+          client.println( "500 Unknow " +String(command) + " " +String(parameters) );
+        }
+      } else {
+        client.println( "500 Unknow " +String(command) + " " +String(parameters) );
+      }
     }
     
   }
@@ -365,16 +371,21 @@ boolean FtpServer::processCommand()
     char path[ FTP_CWD_SIZE ];
     if( strlen( parameters ) == 0 )
       client.println( "501 No file name");
-    else if( makePath( path ))
-    {
-      if( ! sd.exists( path ))
-        client.println( "550 File " + String(parameters) + " not found");
-      else
-      {
-        if( sd.remove( path ))
-          client.println( "250 Deleted " + String(parameters) );
-        else
-          client.println( "450 Can't delete " + String(parameters));
+    else if( makePath( path )) {
+      if( ! sd.exists( path )) {
+        client.println( "550 " + String(parameters) + ": No such file or directory");
+      } else {
+        file.open(path, O_READ);
+        if (file.isFile()) {
+          file.close();
+          if( sd.remove( path ))
+            client.println( "250 Deleted " + String(parameters) );
+          else
+            client.println( "450 Can't delete " + String(parameters));
+        } else {
+          file.close();
+          client.println( "550 " + String(parameters) + ": Is a directory");
+        }
       }
     }
   }
@@ -452,9 +463,8 @@ boolean FtpServer::processCommand()
       client.println( "501 No file name");
     else if( makePath( path ))
     {
-//      file = SPIFFS.open(path, "r");
       if( !sd.exists(path))
-        client.println( "550 File " +String(parameters)+ " not found");
+        client.println( "550 " + String(parameters) + ": No such file or directory");
       else {
         file.open(path,O_READ);
         if( !file.isOpen() )
@@ -511,10 +521,13 @@ boolean FtpServer::processCommand()
   else if( ! strcmp( command, "MKD" ))
   {
     if (sd.exists(parameters)) {
-       client.println( "550 " + String(parameters)+ ": File exists");
+      client.println( "550 " + String(parameters)+ ": File exists");
     } else {
       if (sd.mkdir(parameters) )
-        client.println( "257 \"" + String(cwdName) + String(parameters) + "\" - Directory successfully created");
+        if (strcmp(cwdName, "/") == 0)
+          client.println( "257 \"" + String(cwdName) + String(parameters) + "\" - Directory successfully created");
+        else
+          client.println( "257 \"" + String(cwdName) + "/" + String(parameters) + "\" - Directory successfully created");
       else  
         client.println( "550 " + String(parameters) + ": Invalid directory name");
     }
@@ -527,8 +540,17 @@ boolean FtpServer::processCommand()
     if (!sd.exists(parameters)) {
       client.println( "550 " + String(parameters) + ": No such file or directory");
     } else {
-      sd.rmdir(parameters);
-      client.println( "250 RMD command successful");
+      file.open(parameters, O_READ);
+      if (file.isDir()) {
+        file.close();
+        if (sd.rmdir(parameters))
+          client.println( "250 RMD command successful");
+        else
+          client.println( "550 " + String(parameters) + ": Directory not empty");
+      } else {
+        file.close();
+        client.println( "550 " + String(parameters) + ": Not a directory");
+      }
     }
   
   }
@@ -545,10 +567,10 @@ boolean FtpServer::processCommand()
       Serial.println("Renaming " + String(buf));
       #endif
       if( ! sd.exists( buf ))
-        client.println( "550 File " +String(parameters)+ " not found");
+        client.println( "550 " + String(parameters) + ": No such file or directory");
       else
       {
-        client.println( "350 RNFR accepted - file exists, ready for destination");     
+        client.println( "350 RNFR accepted - File or directory exists, ready for destination");     
         rnfrCmd = true;
       }
     } else {
@@ -571,7 +593,7 @@ boolean FtpServer::processCommand()
     else if( makePath( path ))
     {
       if( sd.exists( path ))
-        client.println( "553 " +String(parameters)+ " already exists");
+        client.println( "553 " +String(parameters)+ ": File exists");
       else
       {          
         #ifdef FTP_DEBUG
@@ -618,16 +640,18 @@ boolean FtpServer::processCommand()
   else if( ! strcmp( command, "SIZE" ))
   {
     char path[ FTP_CWD_SIZE ];
-    if( strlen( parameters ) == 0 )
+    if( strlen( parameters ) == 0 ) {
       client.println( "501 No file name");
-    else if( makePath( path ))
-  {
+    } else if( makePath( path )) {
       file.open(path, O_READ);
-      if(!file.isOpen())
-         client.println( "450 Can't open " +String(parameters) );
-      else
-      {
-        client.println( "213 " + String(file.fileSize()));
+      if(!file.isOpen()) {
+         client.println( "550 " + String(parameters) + ": No such file or directory" );
+      } else {
+        if (file.isFile()) {
+          client.println( "213 " + String(file.fileSize()));
+        } else {
+          client.println( "450 " +String(parameters) + ": not a regular file" );
+        }
         file.close();
       }
     }
@@ -744,7 +768,7 @@ void FtpServer::closeTransfer()
   uint32_t deltaT = (int32_t) ( millis() - millisBeginTrans );
   if( deltaT > 0 && bytesTransfered > 0 )
   {
-    client.println( "226-File successfully transferred");
+    client.println( "226-Transfer complete");
     client.println( "226 " + String(deltaT) + " ms, "+ String(bytesTransfered / deltaT) + " kbytes/s");
   }
   else
@@ -870,25 +894,39 @@ boolean FtpServer::makePath( char * fullName )
 
 boolean FtpServer::makePath( char * fullName, char * param )
 {
+  int pos;
+
   if( param == NULL )
     param = parameters;
-    
+
   // Root or empty?
   if( strcmp( param, "/" ) == 0 || strlen( param ) == 0 )
   {
     strcpy( fullName, "/" );
     return true;
   }
+
+  // If absolute path, store this
+  if( param[0] == '/' ) { // cd /dir1/dir2/dir3
+    strcpy( fullName, param );
+  // If primary path, search primary
+  } else if( strcmp(param,"..") == 0) { // cd ..
+    if (strcmp(cwdName,"/") == 0) return false;
+    for(pos=strlen(cwdName)-1;pos>=0;pos--) {
+      if (cwdName[pos] == '/') {
+        strcpy(fullName,cwdName);
+        fullName[pos+1] = 0;
+        break;
+      }
+    }
   // If relative path, concatenate with current dir
-  if( param[0] != '/' ) 
-  {
+  } else { // cd dir
     strcpy( fullName, cwdName );
     if( fullName[ strlen( fullName ) - 1 ] != '/' )
       strncat( fullName, "/", FTP_CWD_SIZE );
-    strncat( fullName, param, FTP_CWD_SIZE );
+      strncat( fullName, param, FTP_CWD_SIZE );
   }
-  else
-    strcpy( fullName, param );
+
   // If ends with '/', remove it
   uint16_t strl = strlen( fullName ) - 1;
   if( fullName[ strl ] == '/' && strl > 1 )
