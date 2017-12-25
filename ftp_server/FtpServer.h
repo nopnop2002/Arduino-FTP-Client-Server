@@ -26,7 +26,7 @@
  *******************************************************************************/
 
 // Uncomment to print debugging info to console attached to ESP8266
-#define FTP_DEBUG
+//#define FTP_DEBUG
 
 #ifndef FTP_SERVERESP_H
 #define FTP_SERVERESP_H
@@ -55,9 +55,26 @@ class FtpServer
 public:
   void    begin(String uname, String pword);
   void    handleFTP();
-
+  void    setCallBackDelete(void (*functionPointer)(void));
+  void    setCallBackStor(void (*functionPointer)(void));
+  void    setCallBackRmdir(void (*functionPointer)(void));
+  void    setCallBackMkdir(void (*functionPointer)(void));
+  void    setCallBackRename(void (*functionPointer)(void));
 
 private:
+  struct callbacks {
+    short FunctionDelete;
+    short FunctionStor;
+    short FunctionRmdir;
+    short FunctionMkdir;
+    short FunctionRename;
+    void (*pFunctionDelete)(const char *message);
+    void (*pFunctionStor)(const char *message);
+    void (*pFunctionRmdir)(const char *message);
+    void (*pFunctionMkdir)(const char *message);
+    void (*pFunctionRename)(const char *message1, const char *message2);
+    } Callbacks;
+ 
   void    iniVariables();
   void    clientConnected();
   void    disconnectClient();

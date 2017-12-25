@@ -42,6 +42,12 @@ void FtpServer::begin(String uname, String pword)
   millisTimeOut = (uint32_t)FTP_TIME_OUT * 60 * 1000;
   millisDelay = 0;
   cmdStatus = 0;
+
+  Callbacks.FunctionDelete = 0; // delete CallBack Enable/Disable
+  Callbacks.FunctionStor = 0;  // rmdir CallBack Enable/Disable
+  Callbacks.FunctionRmdir = 0;  // rmdir CallBack Enable/Disable
+  Callbacks.FunctionMkdir = 0;  // rmdir CallBack Enable/Disable
+
   iniVariables();
 }
 
@@ -58,8 +64,53 @@ void FtpServer::iniVariables()
 
   rnfrCmd = false;
   transferStatus = 0;
-  
 }
+
+void FtpServer::setCallBackDelete(void (*functionPointer)(void))
+{
+  Callbacks.FunctionDelete = 1;
+  Callbacks.pFunctionDelete = (*functionPointer);
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionDelete=" + String(Callbacks.FunctionDelete));
+  #endif
+}
+
+void FtpServer::setCallBackStor(void (*functionPointer)(void))
+{
+  Callbacks.FunctionStor = 1;
+  Callbacks.pFunctionStor = (*functionPointer);
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionStor=" + String(Callbacks.FunctionStor));
+  #endif
+}
+
+void FtpServer::setCallBackRmdir(void (*functionPointer)(void))
+{
+  Callbacks.FunctionRmdir = 1;
+  Callbacks.pFunctionRmdir = (*functionPointer);
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionRmdir=" + String(Callbacks.FunctionRmdir));
+  #endif
+}
+
+void FtpServer::setCallBackMkdir(void (*functionPointer)(void))
+{
+  Callbacks.FunctionMkdir = 1;
+  Callbacks.pFunctionMkdir = (*functionPointer);
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionMkdir=" + String(Callbacks.FunctionMkdir));
+  #endif
+}
+
+void FtpServer::setCallBackRename(void (*functionPointer)(void))
+{
+  Callbacks.FunctionRename = 1;
+  Callbacks.pFunctionRename = (*functionPointer);
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionRename=" + String(Callbacks.FunctionRename));
+  #endif
+}
+
 
 void FtpServer::handleFTP()
 {
@@ -378,10 +429,15 @@ boolean FtpServer::processCommand()
         file.open(path, O_READ);
         if (file.isFile()) {
           file.close();
-          if( sd.remove( path ))
+          if( sd.remove( path )) {
             client.println( "250 Deleted " + String(parameters) );
-          else
+            #ifdef FTP_DEBUG
+            Serial.println("Callbacks.FunctionDelete=" + String(Callbacks.FunctionDelete));
+            #endif
+            if (Callbacks.FunctionDelete) Callbacks.pFunctionDelete(parameters);
+          } else {
             client.println( "450 Can't delete " + String(parameters));
+          }
         } else {
           file.close();
           client.println( "550 " + String(parameters) + ": Is a directory");
@@ -523,13 +579,19 @@ boolean FtpServer::processCommand()
     if (sd.exists(parameters)) {
       client.println( "550 " + String(parameters)+ ": File exists");
     } else {
-      if (sd.mkdir(parameters) )
-        if (strcmp(cwdName, "/") == 0)
+      if (sd.mkdir(parameters) ) {
+        if (strcmp(cwdName, "/") == 0) {
           client.println( "257 \"" + String(cwdName) + String(parameters) + "\" - Directory successfully created");
-        else
+        } else {
           client.println( "257 \"" + String(cwdName) + "/" + String(parameters) + "\" - Directory successfully created");
-      else  
+        }      
+        #ifdef FTP_DEBUG
+        Serial.println("Callbacks.FunctionMkdir=" + String(Callbacks.FunctionMkdir));
+        #endif
+        if (Callbacks.FunctionMkdir) Callbacks.pFunctionMkdir(parameters);
+      } else {  
         client.println( "550 " + String(parameters) + ": Invalid directory name");
+      }
     }
   }
   //
@@ -543,10 +605,15 @@ boolean FtpServer::processCommand()
       file.open(parameters, O_READ);
       if (file.isDir()) {
         file.close();
-        if (sd.rmdir(parameters))
+        if (sd.rmdir(parameters)) {
           client.println( "250 RMD command successful");
-        else
+          #ifdef FTP_DEBUG
+          Serial.println("Callbacks.FunctionRmdir=" + String(Callbacks.FunctionRmdir));
+          #endif
+          if (Callbacks.FunctionRmdir) Callbacks.pFunctionRmdir(parameters);
+        } else {
           client.println( "550 " + String(parameters) + ": Directory not empty");
+        }
       } else {
         file.close();
         client.println( "550 " + String(parameters) + ": Not a directory");
@@ -599,11 +666,15 @@ boolean FtpServer::processCommand()
         #ifdef FTP_DEBUG
         Serial.println("Renaming " + String(buf) + " to " + String(path));
         #endif
-        if( sd.rename( buf, path ))
+        if( sd.rename( buf, path )) {
           client.println( "250 File successfully renamed or moved");
-        else
+          #ifdef FTP_DEBUG
+          Serial.println("Callbacks.FunctionRename=" + String(Callbacks.FunctionRename));
+          #endif
+          if (Callbacks.FunctionRename) Callbacks.pFunctionRename(buf, path);
+        } else { 
           client.println( "451 Rename/move failure");
-                                 
+        }                         
       }
     }
     rnfrCmd = false;
@@ -760,6 +831,10 @@ boolean FtpServer::doStore()
     return true;
   }
   closeTransfer();
+  #ifdef FTP_DEBUG
+  Serial.println("Callbacks.FunctionStor=" + String(Callbacks.FunctionStor));
+  #endif
+  if (Callbacks.FunctionStor) Callbacks.pFunctionStor(parameters);
   return false;
 }
 

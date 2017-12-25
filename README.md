@@ -53,6 +53,21 @@ Please read README.TXT
 
 ----
 
+# CallBack Function:   
+
+You can use CallBack Function.   
+When put,delete,mkdir,rmdir,rename occurs,
+CallBack function is called.   
+
+Your CallBack Function set these function.   
+void setCallBackDelete(void (*functionPointer)(void));   
+void setCallBackStor(void (*functionPointer)(void));   
+void setCallBackRmdir(void (*functionPointer)(void));   
+void setCallBackMkdir(void (*functionPointer)(void));   
+void setCallBackRename(void (*functionPointer)(void));   
+
+----
+
 Transfer speed is very slow.   
 
 ![ftp_server-2](https://user-images.githubusercontent.com/6020549/34323187-9a9dafac-e880-11e7-83fe-bc5e3dc44173.jpg)
