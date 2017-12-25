@@ -74,7 +74,7 @@ void setup(void){
   ftpSrv.setCallBackStor(CallBackStor);
   // Set Callback Function for Mkdir
   ftpSrv.setCallBackMkdir(CallBackMkdir);
-  // Set Callback Function for Mkdir
+  // Set Callback Function for Rename
   ftpSrv.setCallBackRename(CallBackRename);
 
 }
