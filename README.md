@@ -14,9 +14,9 @@ SdFat Library
 https://github.com/jbeynon/sdfatlib   
 
 You have to change SdFatConfig.h for Software SPI.   
+
  //#define USE_ARDUINO_SPI_LIBRARY 1   
  #define USE_ARDUINO_SPI_LIBRARY 0   
-
  //#define USE_SOFTWARE_SPI 0   
  #define USE_SOFTWARE_SPI 1   
  //uint8_t const SOFT_SPI_CS_PIN = 10;   
