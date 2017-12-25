@@ -56,7 +56,7 @@ Please read README.TXT
 # CallBack Function with FTP Server:   
 
 You can use CallBack Function with FTP Server.   
-When put,delete,mkdir,rmdir,rename occurs,your CallBack function is called.   
+When put,delete,mkdir,rmdir,rename occurs, your CallBack function is called.   
 You can know what occurred within FTP Server.   
 
 Your CallBack Function set these function.   
