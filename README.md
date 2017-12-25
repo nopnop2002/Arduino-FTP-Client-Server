@@ -59,7 +59,6 @@ You can use CallBack Function with FTP Server.
 When put,delete,mkdir,rmdir,rename occurs, your CallBack function is called.   
 You can know what occurred within FTP Server.   
 
-Your CallBack Function set these function.   
 void setCallBackDelete(void (*functionPointer)(void));   
 void setCallBackStor(void (*functionPointer)(void));   
 void setCallBackRmdir(void (*functionPointer)(void));   
