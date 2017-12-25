@@ -53,7 +53,7 @@ Please read README.TXT
 
 ----
 
-# CallBack Function of FTP Server:   
+# CallBack Function with FTP Server:   
 
 You can use CallBack Function in FTP Server.   
 When put,delete,mkdir,rmdir,rename occurs,
