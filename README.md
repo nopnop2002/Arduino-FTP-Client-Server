@@ -43,7 +43,7 @@ Please read README.TXT
 |MOSI||Pin#51|
 |SCK||Pin#52|
 |VCC||5V|
-|GND||GND2|
+|GND||GND|
 ||CS|Pin#2|
 ||MOSI|Pin#3|
 ||MISO|Pin#4|
