@@ -1,8 +1,6 @@
 /*
- * FTP Serveur for Arduino(AMEGA2560)
- * based on FTP Serveur for Arduino Due and Ethernet shield (W5100) or WIZ820io (W5200)
- * based on Jean-Michel Gallego's work
- * modified to work with esp8266 SPIFFS by David Paiva david@nailbuster.com
+ * FTP Serveur for ATMEGA2560
+ * based on esp8266FTPServerFTP by David Paiva
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,10 +41,10 @@ void FtpServer::begin(String uname, String pword)
   millisDelay = 0;
   cmdStatus = 0;
 
-  Callbacks.FunctionDelete = 0; // delete CallBack Enable/Disable
-  Callbacks.FunctionStor = 0;  // rmdir CallBack Enable/Disable
-  Callbacks.FunctionRmdir = 0;  // rmdir CallBack Enable/Disable
-  Callbacks.FunctionMkdir = 0;  // rmdir CallBack Enable/Disable
+  Callbacks.FunctionDelete = 0; // Disable CallBack
+  Callbacks.FunctionStor = 0;   // Disable CallBack
+  Callbacks.FunctionRmdir = 0;  // Disable CallBack
+  Callbacks.FunctionMkdir = 0;  // Disable CallBack
 
   iniVariables();
 }
@@ -68,7 +66,7 @@ void FtpServer::iniVariables()
 
 void FtpServer::setCallBackDelete(void (*functionPointer)(void))
 {
-  Callbacks.FunctionDelete = 1;
+  Callbacks.FunctionDelete = 1; // Enable CallBack
   Callbacks.pFunctionDelete = (*functionPointer);
   #ifdef FTP_DEBUG
   Serial.println("Callbacks.FunctionDelete=" + String(Callbacks.FunctionDelete));
@@ -77,7 +75,7 @@ void FtpServer::setCallBackDelete(void (*functionPointer)(void))
 
 void FtpServer::setCallBackStor(void (*functionPointer)(void))
 {
-  Callbacks.FunctionStor = 1;
+  Callbacks.FunctionStor = 1; // Enable CallBack
   Callbacks.pFunctionStor = (*functionPointer);
   #ifdef FTP_DEBUG
   Serial.println("Callbacks.FunctionStor=" + String(Callbacks.FunctionStor));
@@ -86,7 +84,7 @@ void FtpServer::setCallBackStor(void (*functionPointer)(void))
 
 void FtpServer::setCallBackRmdir(void (*functionPointer)(void))
 {
-  Callbacks.FunctionRmdir = 1;
+  Callbacks.FunctionRmdir = 1; // Enable CallBack
   Callbacks.pFunctionRmdir = (*functionPointer);
   #ifdef FTP_DEBUG
   Serial.println("Callbacks.FunctionRmdir=" + String(Callbacks.FunctionRmdir));
@@ -95,7 +93,7 @@ void FtpServer::setCallBackRmdir(void (*functionPointer)(void))
 
 void FtpServer::setCallBackMkdir(void (*functionPointer)(void))
 {
-  Callbacks.FunctionMkdir = 1;
+  Callbacks.FunctionMkdir = 1; // Enable CallBack
   Callbacks.pFunctionMkdir = (*functionPointer);
   #ifdef FTP_DEBUG
   Serial.println("Callbacks.FunctionMkdir=" + String(Callbacks.FunctionMkdir));
@@ -266,9 +264,22 @@ boolean FtpServer::processCommand()
   //
   //  CDUP - Change to Parent Directory 
   //
-  if( ! strcmp( command, "CDUP" ))
+  if( ! strcmp( command, "CDUP" ) )
   {
-    client.println("250 Ok. Current directory is " + String(cwdName));
+    char path[ FTP_CWD_SIZE ];
+    if( makePath(path,"..")) {
+      #ifdef FTP_DEBUG
+      Serial.println("CWD path=" + String(path));
+      #endif
+      if (sd.chdir(path)) {
+        strcpy(cwdName, path);
+        client.println( "257 \"" + String(cwdName) + "\" is your current directory");
+      } else {
+        client.println( "550 No such file or directory" );
+      }
+    } else {
+      client.println( "550 No such file or directory" );
+    }
   }
   //
   //  CWD - Change Working Directory
@@ -287,10 +298,10 @@ boolean FtpServer::processCommand()
           strcpy(cwdName, path);
           client.println( "257 \"" + String(cwdName) + "\" is your current directory");
         } else {
-          client.println( "500 Unknow " +String(command) + " " +String(parameters) );
+          client.println( "550 " + String(parameters) + ": No such file or directory" );
         }
       } else {
-        client.println( "500 Unknow " +String(command) + " " +String(parameters) );
+        client.println( "550 " + String(parameters) + ": No such file or directory" );
       }
     }
     
@@ -448,12 +459,15 @@ boolean FtpServer::processCommand()
   //
   //  LIST - List 
   //
-  else if( ! strcmp( command, "LIST" ))
+  else if( ! strcmp( command, "LIST" ) ||  ! strcmp( command, "NLST" ) )
   {
     if( ! dataConnect())
       client.println( "425 No data connection");
     else
     {
+      int type = 0;
+      if (! strcmp( command, "LIST" ) ) type = 1;
+      Serial.println("type=" + String(type));
       client.println( "150 Accepted data connection");
       uint16_t nm = 0;
 
@@ -462,23 +476,23 @@ boolean FtpServer::processCommand()
       sd.chdir( cwdName );
       while (file.openNext(sd.vwd(), O_READ)) {
         if (file.isDir()) {
-          data.print("drw-r--r--   ");
+          if (type) data.print("drw-r--r--   ");
         } else {
-          data.print("-rw-r--r--   ");
+          if (type) data.print("-rw-r--r--   ");
         }
-        data.print(_FTP_USER);
-        data.print(" ");
-        data.print(_FTP_USER);
-        fsize = file.fileSize();
-        sprintf(buf,"%9ld ",fsize);
-        data.print(buf);
-        file.printModifyDateTime(&data);
-        data.print(" ");
-        file.printName(&data);
+        if (type) data.print(_FTP_USER);
+        if (type) data.print(" ");
+        if (type) data.print(_FTP_USER);
+        if (type) fsize = file.fileSize();
+        if (type) sprintf(buf,"%9ld ",fsize);
+        if (type) data.print(buf);
+        if (type) file.printModifyDateTime(&data);
+        if (type) data.print(" ");
         #ifdef FTP_DEBUG
         file.printName(&Serial);
         Serial.println("");
         #endif
+        file.printName(&data);
         data.println("");
         file.close();
         nm++;
@@ -486,20 +500,6 @@ boolean FtpServer::processCommand()
       client.println( "226 " + String(nm) + " matches total");
       data.stop();
     }
-  }
-  //
-  //  MLSD - Listing for Machine Processing (see RFC 3659)
-  //
-  else if( ! strcmp( command, "MLSD" ))
-  {
-    client.println( "500 Unknow " +String(command) + " " +String(parameters) );
-  }
-  //
-  //  NLST - Name List 
-  //
-  else if( ! strcmp( command, "NLST" ))
-  {
-    client.println( "500 Unknow " +String(command) + " " +String(parameters) );
   }
   //
   //  NOOP
@@ -727,13 +727,12 @@ boolean FtpServer::processCommand()
       }
     }
   }
-
   //
-  //  SITE - System command
+  //  SYST - System command
   //
-  else if( ! strcmp( command, "SITE" ))
+  else if( ! strcmp( command, "SYST" ))
   {
-    client.println( "500 Unknow " +String(command) + " " +String(parameters) );
+    client.println( "215 Arduino ATMEGA2560");
   }
   //
   //  Unrecognized commands ...

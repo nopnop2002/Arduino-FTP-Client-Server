@@ -25,20 +25,20 @@ void CallBackStor(const char *fileName) {
 }
 
 void CallBackRmdir(const char *dirName) {
-  Serial.println("[CallBack] RmDir=" + String(dirName));
+  Serial.println("[CallBack] RemoveDirectory=" + String(dirName));
 }
 
 void CallBackMkdir(const char *dirName) {
-  Serial.println("[CallBack] MkDir=" + String(dirName));
+  Serial.println("[CallBack] MakeDirectory=" + String(dirName));
 }
 
 void CallBackRename(const char *fileName1, const char *fileName2) {
-  Serial.println("[CallBack] Rename from=" + String(fileName1) + " to=" + String(fileName2));
+  Serial.println("[CallBack] Rename file from=" + String(fileName1) + " to=" + String(fileName2));
 }
 
 void setup(void){
-  byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; 
-  byte myIP[] = { 192, 168, 10, 190 };
+  byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };   // You can change
+  byte myIP[] = { 192, 168, 10, 190 };                   // You can change
 
   // SD chip select pin
   uint8_t chipSelect = 2;
@@ -54,6 +54,14 @@ void setup(void){
 
   Serial.print("Ethernet begin....");
   Ethernet.begin(mac,myIP);
+  for (byte thisByte = 0; thisByte < 4; thisByte++) {
+    // print the value of each byte of the IP address:
+//    Serial.println(Ethernet.localIP()[thisByte]);
+    if (Ethernet.localIP()[thisByte] != myIP[thisByte] ) {
+      Serial.println("fail....");
+      while (1) {}
+    }
+  }
   Serial.println("ok....");
   Serial.print("localIP: ");
   Serial.println(Ethernet.localIP());

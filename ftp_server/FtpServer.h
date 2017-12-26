@@ -1,9 +1,7 @@
 
 /*
- * FTP Serveur for Arduino(AMEGA2560)
- * based on FTP Serveur for Arduino Due and Ethernet shield (W5100) or WIZ820io (W5200)
- * based on Jean-Michel Gallego's work
- * modified to work with esp8266 SPIFFS by David Paiva (david@nailbuster.com)
+ * FTP Serveur for ATMEGA2560
+ * based on esp8266FTPServerFTP by David Paiva
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
