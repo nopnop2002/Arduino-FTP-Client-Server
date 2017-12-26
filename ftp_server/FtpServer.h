@@ -1,7 +1,8 @@
 
 /*
  * FTP Serveur for ATMEGA2560
- * based on esp8266FTPServerFTP by David Paiva
+ * based on esp8266FTPServer by David Paiva
+ * https://github.com/nailbuster/esp8266FTPServer
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
