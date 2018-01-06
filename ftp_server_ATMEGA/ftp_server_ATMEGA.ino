@@ -12,6 +12,9 @@
 #define FTP_USER    "arduino"  // You can change
 #define FTP_PASS    "mega"     // You can change
 
+// SD chip select pin
+const uint8_t SD_CS = 2;
+
 SdFat sd;
 SdFile file;
 FtpServer ftpSrv;
@@ -40,12 +43,9 @@ void setup(void){
   byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };   // You can change
   byte myIP[] = { 192, 168, 10, 190 };                   // You can change
 
-  // SD chip select pin
-  uint8_t chipSelect = 2;
-  
   Serial.begin(9600);
   Serial.print("SD begin....");
-  if (!sd.begin(chipSelect, SPI_HALF_SPEED)) {
+  if (!sd.begin(SD_CS, SPI_HALF_SPEED)) {
     Serial.println("failed....");
     while(1) {}
   }

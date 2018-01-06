@@ -468,7 +468,7 @@ boolean FtpServer::processCommand()
     {
       int type = 0;
       if (! strcmp( command, "LIST" ) ) type = 1;
-      Serial.println("type=" + String(type));
+//      Serial.println("type=" + String(type));
       client.println( "150 Accepted data connection");
       uint16_t nm = 0;
 

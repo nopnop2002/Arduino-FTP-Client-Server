@@ -23,7 +23,7 @@ EthernetClient client;
 EthernetClient dclient;
 
 // SD chip select pin
-const uint8_t chipSelect = 2;
+const uint8_t SD_CS = 2;
 
 SdFat sd;
 SdFile file;
@@ -46,7 +46,11 @@ void errorDisplay(char* buff) {
 }
 
 void displayHelp() {
-  Serial.println("\n\nReady. Press command");
+  Serial.println("\n\n");
+  Serial.println("*************************************");
+  sd.ls(LS_DATE | LS_SIZE | LS_R);
+  Serial.println("*************************************");
+  Serial.println("\nReady. Press command");
   Serial.println(" g:Get from Remote File");
   Serial.println(" p:Put to Remote File");
   Serial.println(" r:Read Local File");
@@ -57,7 +61,7 @@ void displayHelp() {
 void setup()
 {
   Serial.begin(9600);
-  if (!sd.begin(chipSelect, SPI_HALF_SPEED)) {
+  if (!sd.begin(SD_CS, SPI_HALF_SPEED)) {
     errorDisplay("Failed to begin SD Card");
   }
   Serial.println("sd begin OK");
@@ -104,16 +108,10 @@ void loop()
 
   if(inChar == 'd') {
     sd.remove(fileName);
-    Serial.println("*************************************");
-    sd.ls(LS_DATE | LS_SIZE | LS_R);
-    Serial.println("*************************************");
     displayHelp();
   }
 
   if(inChar == 'l') {
-    Serial.println("*************************************");
-    sd.ls(LS_DATE | LS_SIZE | LS_R);
-    Serial.println("*************************************");
     displayHelp();
   }
 
